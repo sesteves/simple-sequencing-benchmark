@@ -31,6 +31,8 @@ public class Main {
     private static final int MAX_ROWS = 1000;
     private static final int MAX_WAVES = 1000;
     private static final int MAX_SEQUENCES = 1;
+    private static final int MIN_SEQUENCE_ITEMS = 3;
+    private static final double FREQ_SEQUENCE_RATIO = 0.5;
 
     private static List<List<DataContainer>> sequences;
 
@@ -85,8 +87,8 @@ public class Main {
         }
 
         System.out.println("Populating...");
-        for (int i = 0; i < 1000; i++) {
-            Put put = new Put(Bytes.toBytes(String.valueOf(i)));
+        for (int row = 0; row < MAX_ROWS; row++) {
+            Put put = new Put(Bytes.toBytes(String.valueOf(row)));
             for (String family : FAMILIES)
                 for (String qualifier : QUALIFIERS)
                     put.add(Bytes.toBytes(family), Bytes.toBytes(qualifier), Bytes.toBytes(randomString(random.nextInt(100))));
@@ -103,7 +105,7 @@ public class Main {
             List<DataContainer> sequence = new ArrayList<DataContainer>();
 
             String row = String.valueOf(random.nextInt(MAX_ROWS));
-            int sequenceSize = 3 + random.nextInt(20);
+            int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(20);
             System.out.print("SEQ " + i + ": ");
             for (int j = 0; j < sequenceSize; j++) {
                 String table = TABLES[random.nextInt(TABLES.length)];
@@ -124,7 +126,7 @@ public class Main {
         for (int wave = 0; wave < MAX_WAVES; wave++) {
 
             htables.get(TABLES[0]).markTransaction();
-            if (random.nextDouble() > 0.5) {
+            if (random.nextDouble() > FREQ_SEQUENCE_RATIO) {
                 List<DataContainer> sequence = sequences.get(random.nextInt(sequences.size()));
                 for (DataContainer dc : sequence) {
                     Get get = new Get(dc.getRow());
@@ -132,7 +134,7 @@ public class Main {
                     htables.get(Bytes.toString(dc.getTable())).get(get);
                 }
             } else {
-                int size = 3 + random.nextInt(20);
+                int size = MIN_SEQUENCE_ITEMS + random.nextInt(20);
                 for (int i = 0; i < size; i++) {
 
                     Get get = new Get(Bytes.toBytes(String.valueOf(random.nextInt(MAX_ROWS))));
