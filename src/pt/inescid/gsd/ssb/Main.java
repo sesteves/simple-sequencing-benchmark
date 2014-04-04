@@ -23,6 +23,12 @@ import pt.inescid.gsd.cachemining.HTable;
 
 public class Main {
 
+    private enum SequenceType {
+        COLUMN, ROW;
+    };
+
+    private static SequenceType sequenceType = SequenceType.ROW;
+
     private static final String[] TABLES = { "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9" };
     private static final String[] FAMILIES = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
             "r", "s", "t", "u", "v", "w", "x", "y", "z" };
@@ -44,18 +50,21 @@ public class Main {
 
     private static Map<String, HTable> htables = new HashMap<String, HTable>();
 
+    private static boolean tablesCreated = false;
+
     private static void init() throws IOException {
         final Configuration config = HBaseConfiguration.create();
-        // config.set("hbase.zookeeper.quorum", "prosopon");
+        config.set("hbase.zookeeper.quorum", "prosopon");
         try {
             HBaseAdmin.checkHBaseAvailable(config);
             System.out.println("HBase is running!");
             hbaseAdmin = new HBaseAdmin(config);
+            createTables();
 
             for (String table : TABLES)
                 htables.put(table, new HTable(config, table));
 
-            htablePool = new HTablePool(config, 10);
+            // htablePool = new HTablePool(config, 10);
 
             // htable.setAutoFlush(false);
             // htable.setWriteBufferSize(1024 * 1024 * 12);
@@ -63,6 +72,18 @@ public class Main {
             e.printStackTrace();
         } catch (ZooKeeperConnectionException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void createTables() throws IOException {
+        if (!hbaseAdmin.tableExists(TABLES[0])) {
+            for (String table : TABLES) {
+                HTableDescriptor desc = new HTableDescriptor(table);
+                for (String family : FAMILIES)
+                    desc.addFamily(new HColumnDescriptor(family));
+                hbaseAdmin.createTable(desc);
+            }
+            tablesCreated = true;
         }
     }
 
@@ -76,16 +97,8 @@ public class Main {
     }
 
     private static void populate() throws IOException {
-        if (hbaseAdmin.tableExists(TABLES[0]))
+        if (!tablesCreated)
             return;
-
-        for (String table : TABLES) {
-            HTableDescriptor desc = new HTableDescriptor(table);
-            for (String family : FAMILIES)
-                desc.addFamily(new HColumnDescriptor(family));
-            hbaseAdmin.createTable(desc);
-        }
-
         System.out.println("Populating...");
         for (int row = 0; row < MAX_ROWS; row++) {
             Put put = new Put(Bytes.toBytes(String.valueOf(row)));
@@ -102,20 +115,33 @@ public class Main {
         sequences = new ArrayList<List<DataContainer>>();
 
         for (int i = 0; i < MAX_SEQUENCES; i++) {
-            List<DataContainer> sequence = new ArrayList<DataContainer>();
-
-            String row = String.valueOf(random.nextInt(MAX_ROWS));
             int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(20);
-            System.out.print("SEQ " + i + ": ");
-            for (int j = 0; j < sequenceSize; j++) {
+            List<DataContainer> sequence = new ArrayList<DataContainer>(sequenceSize);
+
+            if (sequenceType == SequenceType.COLUMN) {
+                String row = String.valueOf(random.nextInt(MAX_ROWS));
+                System.out.print("SEQ " + i + ": ");
+                for (int j = 0; j < sequenceSize; j++) {
+                    String table = TABLES[random.nextInt(TABLES.length)];
+                    String family = FAMILIES[random.nextInt(FAMILIES.length)];
+                    String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
+                    sequence.add(new DataContainer(table, row, family, qualifier));
+                    System.out.print(table + ":" + row + ":" + family + ":" + qualifier + " ");
+                }
+                System.out.println();
+
+            } else if (sequenceType == SequenceType.ROW) {
+
                 String table = TABLES[random.nextInt(TABLES.length)];
                 String family = FAMILIES[random.nextInt(FAMILIES.length)];
                 String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
-                sequence.add(new DataContainer(table, row, family, qualifier));
-                System.out.print(table + ":" + row + ":" + family + ":" + qualifier + " ");
+                for (int j = 0; j < sequenceSize; j++) {
+                    String row = String.valueOf(random.nextInt(MAX_ROWS));
+                    sequence.add(new DataContainer(table, row, family, qualifier));
+                    System.out.print(table + ":" + row + ":" + family + ":" + qualifier + " ");
+                }
+                System.out.println();
             }
-            System.out.println();
-
             sequences.add(sequence);
         }
     }
