@@ -54,7 +54,7 @@ public class Main {
 
     private static void init() throws IOException {
         final Configuration config = HBaseConfiguration.create();
-        config.set("hbase.zookeeper.quorum", "prosopon");
+        config.set("hbase.zookeeper.quorum", "ginja-a4");
         try {
             HBaseAdmin.checkHBaseAvailable(config);
             System.out.println("HBase is running!");
@@ -68,9 +68,7 @@ public class Main {
 
             // htable.setAutoFlush(false);
             // htable.setWriteBufferSize(1024 * 1024 * 12);
-        } catch (MasterNotRunningException e) {
-            e.printStackTrace();
-        } catch (ZooKeeperConnectionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
