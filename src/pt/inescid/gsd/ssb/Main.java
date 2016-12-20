@@ -11,8 +11,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.MasterNotRunningException;
-import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTablePool;
@@ -24,8 +22,8 @@ import pt.inescid.gsd.cachemining.HTable;
 public class Main {
 
     private enum SequenceType {
-        COLUMN, ROW;
-    };
+        COLUMN, ROW
+    }
 
     private static SequenceType sequenceType = SequenceType.ROW;
 
@@ -95,15 +93,18 @@ public class Main {
     }
 
     private static void populate() throws IOException {
-//        if (!tablesCreated)
-//            return;
+        if (!tablesCreated)
+            return;
+
+        byte[] block = new byte[100];
+        random.nextBytes(block);
+
         System.out.println("Populating...");
         for (int row = 0; row < MAX_ROWS; row++) {
             Put put = new Put(Bytes.toBytes(String.valueOf(row)));
             for (String family : FAMILIES) {
                 for (String qualifier : QUALIFIERS) {
-                    // TODO place heavy data in data field
-                    put.add(Bytes.toBytes(family), Bytes.toBytes(qualifier), Bytes.toBytes(randomString(random.nextInt(100))));
+                    put.add(Bytes.toBytes(family), Bytes.toBytes(qualifier), block);
                 }
             }
 
