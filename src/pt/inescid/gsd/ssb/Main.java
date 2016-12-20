@@ -95,14 +95,17 @@ public class Main {
     }
 
     private static void populate() throws IOException {
-        if (!tablesCreated)
-            return;
+//        if (!tablesCreated)
+//            return;
         System.out.println("Populating...");
         for (int row = 0; row < MAX_ROWS; row++) {
             Put put = new Put(Bytes.toBytes(String.valueOf(row)));
-            for (String family : FAMILIES)
-                for (String qualifier : QUALIFIERS)
+            for (String family : FAMILIES) {
+                for (String qualifier : QUALIFIERS) {
+                    // TODO place heavy data in data field
                     put.add(Bytes.toBytes(family), Bytes.toBytes(qualifier), Bytes.toBytes(randomString(random.nextInt(100))));
+                }
+            }
 
             for (String table : TABLES)
                 htables.get(table).put(put);
