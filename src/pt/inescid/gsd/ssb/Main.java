@@ -73,6 +73,7 @@ public class Main {
 
     private static void createTables() throws IOException {
         if (!hbaseAdmin.tableExists(TABLES[0])) {
+            System.out.println("Creating tables...");
             for (String table : TABLES) {
                 HTableDescriptor desc = new HTableDescriptor(table);
                 for (String family : FAMILIES)
@@ -114,11 +115,13 @@ public class Main {
     }
 
     private static void loadFrequentSequences() {
-        sequences = new ArrayList<List<DataContainer>>();
+        System.out.println("Loading frequent sequences");
+
+        sequences = new ArrayList<>(MAX_SEQUENCES);
 
         for (int i = 0; i < MAX_SEQUENCES; i++) {
             int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(20);
-            List<DataContainer> sequence = new ArrayList<DataContainer>(sequenceSize);
+            List<DataContainer> sequence = new ArrayList<>(sequenceSize);
 
             if (sequenceType == SequenceType.COLUMN) {
                 String row = String.valueOf(random.nextInt(MAX_ROWS));
@@ -149,6 +152,8 @@ public class Main {
     }
 
     private static void runWorkload() throws IOException {
+
+        System.out.println("Running workload...");
 
         Random random = new Random();
         for (int wave = 0; wave < MAX_WAVES; wave++) {
