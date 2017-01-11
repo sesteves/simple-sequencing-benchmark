@@ -40,13 +40,15 @@ public class Main {
 
     private static List<List<DataContainer>> sequences;
 
+    private static Map<String, List<String>> stringSequences;
+
     private static HTablePool htablePool = null;
 
     private static Random random = new Random(100);
 
     private static HBaseAdmin hbaseAdmin;
 
-    private static Map<String, HTable> htables = new HashMap<String, HTable>();
+    private static Map<String, HTable> htables = new HashMap<>();
 
     private static boolean tablesCreated = false;
 
@@ -59,8 +61,9 @@ public class Main {
             hbaseAdmin = new HBaseAdmin(config);
             createTables();
 
-            for (String table : TABLES)
-                htables.put(table, new HTable(config, table));
+            for (String table : TABLES) {
+                htables.put(table, new HTable(config, table, stringSequences));
+            }
 
             // htablePool = new HTablePool(config, 10);
 
@@ -114,14 +117,17 @@ public class Main {
         }
     }
 
-    private static void loadFrequentSequences() {
-        System.out.println("Loading frequent sequences");
+    private static void generateFrequentSequences() {
+        System.out.println("Generating frequent sequences...");
 
         sequences = new ArrayList<>(MAX_SEQUENCES);
+        stringSequences = new HashMap<>(MAX_SEQUENCES);
 
         for (int i = 0; i < MAX_SEQUENCES; i++) {
             int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(20);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
+            List<String> stringSequence = new ArrayList<>(sequenceSize);
+            String firstItem = null;
 
             if (sequenceType == SequenceType.COLUMN) {
                 String row = String.valueOf(random.nextInt(MAX_ROWS));
@@ -131,7 +137,13 @@ public class Main {
                     String family = FAMILIES[random.nextInt(FAMILIES.length)];
                     String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
                     sequence.add(new DataContainer(table, row, family, qualifier));
-                    System.out.print(table + ":" + row + ":" + family + ":" + qualifier + " ");
+                    String stringItem = table + ":" + row + ":" + family + ":" + qualifier;
+                    if(j == 0) {
+                        firstItem = stringItem;
+                    } else {
+                        stringSequence.add(stringItem);
+                    }
+                    System.out.print(stringItem + " ");
                 }
                 System.out.println();
 
@@ -143,11 +155,19 @@ public class Main {
                 for (int j = 0; j < sequenceSize; j++) {
                     String row = String.valueOf(random.nextInt(MAX_ROWS));
                     sequence.add(new DataContainer(table, row, family, qualifier));
-                    System.out.print(table + ":" + row + ":" + family + ":" + qualifier + " ");
+                    String stringItem = table + ":" + row + ":" + family + ":" + qualifier;
+                    if(j == 0) {
+                        firstItem = stringItem;
+                    } else {
+                        stringSequence.add(stringItem);
+                    }
+                    System.out.print(stringItem + " ");
                 }
                 System.out.println();
             }
+
             sequences.add(sequence);
+            stringSequences.put(firstItem, stringSequence);
         }
     }
 
@@ -159,7 +179,7 @@ public class Main {
         for (int wave = 0; wave < MAX_WAVES; wave++) {
 
             htables.get(TABLES[0]).markTransaction();
-            if (random.nextDouble() > FREQ_SEQUENCE_RATIO) {
+            if (random.nextDouble() > -1) {
                 List<DataContainer> sequence = sequences.get(random.nextInt(sequences.size()));
                 for (DataContainer dc : sequence) {
                     Get get = new Get(dc.getRow());
@@ -182,9 +202,9 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
+        generateFrequentSequences();
         init();
         populate();
-        loadFrequentSequences();
         long startTick = System.currentTimeMillis();
         runWorkload();
         long endTick = System.currentTimeMillis();
