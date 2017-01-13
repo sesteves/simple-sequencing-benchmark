@@ -40,7 +40,7 @@ public class Main {
 
     private static List<List<DataContainer>> sequences;
 
-    private static Map<String, List<String>> stringSequences;
+    private static List<List<String>> stringSequences;
 
     private static HTablePool htablePool = null;
 
@@ -121,13 +121,12 @@ public class Main {
         System.out.println("Generating frequent sequences...");
 
         sequences = new ArrayList<>(MAX_SEQUENCES);
-        stringSequences = new HashMap<>(MAX_SEQUENCES);
+        stringSequences = new ArrayList<>(MAX_SEQUENCES);
 
         for (int i = 0; i < MAX_SEQUENCES; i++) {
             int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(20);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
             List<String> stringSequence = new ArrayList<>(sequenceSize);
-            String firstItem = null;
 
             if (sequenceType == SequenceType.COLUMN) {
                 String row = String.valueOf(random.nextInt(MAX_ROWS));
@@ -138,11 +137,7 @@ public class Main {
                     String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
                     sequence.add(new DataContainer(table, row, family, qualifier));
                     String stringItem = table + ":" + row + ":" + family + ":" + qualifier;
-                    if(j == 0) {
-                        firstItem = stringItem;
-                    } else {
-                        stringSequence.add(stringItem);
-                    }
+                    stringSequence.add(stringItem);
                     System.out.print(stringItem + " ");
                 }
                 System.out.println();
@@ -156,18 +151,14 @@ public class Main {
                     String row = String.valueOf(random.nextInt(MAX_ROWS));
                     sequence.add(new DataContainer(table, row, family, qualifier));
                     String stringItem = table + ":" + row + ":" + family + ":" + qualifier;
-                    if(j == 0) {
-                        firstItem = stringItem;
-                    } else {
-                        stringSequence.add(stringItem);
-                    }
+                    stringSequence.add(stringItem);
                     System.out.print(stringItem + " ");
                 }
                 System.out.println();
             }
 
             sequences.add(sequence);
-            stringSequences.put(firstItem, stringSequence);
+            stringSequences.add(stringSequence);
         }
     }
 
