@@ -17,6 +17,7 @@ import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import pt.inescid.gsd.cachemining.DataContainer;
 import pt.inescid.gsd.cachemining.HTable;
 
 public class Main {
@@ -62,7 +63,7 @@ public class Main {
             createTables();
 
             for (String table : TABLES) {
-                htables.put(table, new HTable(config, table, stringSequences));
+                htables.put(table, new HTable(config, table, sequences));
             }
 
             // htablePool = new HTablePool(config, 10);
@@ -202,55 +203,5 @@ public class Main {
 
         System.out.println("Time taken: " + (endTick - startTick));
 
-    }
-
-    private static class DataContainer {
-        private byte[] table;
-        private byte[] row;
-        private byte[] family;
-        private byte[] qualifier;
-
-        public DataContainer(String table, String row, String family, String qualifier) {
-            this(Bytes.toBytes(table), Bytes.toBytes(row), Bytes.toBytes(family), Bytes.toBytes(qualifier));
-        }
-
-        public DataContainer(byte[] table, byte[] row, byte[] family, byte[] qualifier) {
-            this.table = table;
-            this.row = row;
-            this.family = family;
-            this.qualifier = qualifier;
-        }
-
-        public byte[] getTable() {
-            return table;
-        }
-
-        public void setTable(byte[] table) {
-            this.table = table;
-        }
-
-        public byte[] getRow() {
-            return row;
-        }
-
-        public void setRow(byte[] row) {
-            this.row = row;
-        }
-
-        public byte[] getFamily() {
-            return family;
-        }
-
-        public void setFamily(byte[] family) {
-            this.family = family;
-        }
-
-        public byte[] getQualifier() {
-            return qualifier;
-        }
-
-        public void setQualifier(byte[] qualifier) {
-            this.qualifier = qualifier;
-        }
     }
 }
