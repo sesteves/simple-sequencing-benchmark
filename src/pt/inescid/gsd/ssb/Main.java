@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.math3.distribution.ZipfDistribution;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -40,8 +41,6 @@ public class Main {
     private static final double FREQ_SEQUENCE_RATIO = 0.5;
 
     private static List<List<DataContainer>> sequences;
-
-    private static List<List<String>> stringSequences;
 
     private static HTablePool htablePool = null;
 
@@ -101,7 +100,7 @@ public class Main {
         if (!tablesCreated)
             return;
 
-        byte[] block = new byte[100];
+        byte[] block = new byte[1000];
         random.nextBytes(block);
 
         System.out.println("Populating...");
@@ -122,12 +121,10 @@ public class Main {
         System.out.println("Generating frequent sequences...");
 
         sequences = new ArrayList<>(MAX_SEQUENCES);
-        stringSequences = new ArrayList<>(MAX_SEQUENCES);
 
         for (int i = 0; i < MAX_SEQUENCES; i++) {
             int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(20);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
-            List<String> stringSequence = new ArrayList<>(sequenceSize);
 
             if (sequenceType == SequenceType.COLUMN) {
                 String row = String.valueOf(random.nextInt(MAX_ROWS));
@@ -136,10 +133,9 @@ public class Main {
                     String table = TABLES[random.nextInt(TABLES.length)];
                     String family = FAMILIES[random.nextInt(FAMILIES.length)];
                     String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
-                    sequence.add(new DataContainer(table, row, family, qualifier));
-                    String stringItem = table + ":" + row + ":" + family + ":" + qualifier;
-                    stringSequence.add(stringItem);
-                    System.out.print(stringItem + " ");
+                    DataContainer item = new DataContainer(table, row, family, qualifier);
+                    sequence.add(item);
+                    System.out.print(item + " ");
                 }
                 System.out.println();
 
@@ -150,16 +146,14 @@ public class Main {
                 String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
                 for (int j = 0; j < sequenceSize; j++) {
                     String row = String.valueOf(random.nextInt(MAX_ROWS));
-                    sequence.add(new DataContainer(table, row, family, qualifier));
-                    String stringItem = table + ":" + row + ":" + family + ":" + qualifier;
-                    stringSequence.add(stringItem);
-                    System.out.print(stringItem + " ");
+                    DataContainer item = new DataContainer(table, row, family, qualifier);
+                    sequence.add(item);
+                    System.out.print(item + " ");
                 }
                 System.out.println();
             }
 
             sequences.add(sequence);
-            stringSequences.add(stringSequence);
         }
     }
 
@@ -167,11 +161,18 @@ public class Main {
 
         System.out.println("Running workload...");
 
-        Random random = new Random();
+        Random random = new Random(100);
+
+        new ZipfDistribution();
+
+
+
+
+
         for (int wave = 0; wave < MAX_WAVES; wave++) {
 
             htables.get(TABLES[0]).markTransaction();
-            if (random.nextDouble() > -1) {
+            if (random.nextDouble() > FREQ_SEQUENCE_RATIO) {
                 List<DataContainer> sequence = sequences.get(random.nextInt(sequences.size()));
                 for (DataContainer dc : sequence) {
                     Get get = new Get(dc.getRow());
