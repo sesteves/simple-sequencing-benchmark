@@ -160,20 +160,17 @@ public class Main {
     private static void runWorkload() throws IOException {
 
         System.out.println("Running workload...");
-
         Random random = new Random(100);
 
-        new ZipfDistribution();
-
-
-
-
+        // exponent is linked to number of frequent sequences
+        ZipfDistribution zipf = new ZipfDistribution(100, 3);
 
         for (int wave = 0; wave < MAX_WAVES; wave++) {
 
-            htables.get(TABLES[0]).markTransaction();
-            if (random.nextDouble() > FREQ_SEQUENCE_RATIO) {
-                List<DataContainer> sequence = sequences.get(random.nextInt(sequences.size()));
+            // htables.get(TABLES[0]).markTransaction();
+            int sample = zipf.sample() - 1;
+            if (sample < sequences.size()) {
+                List<DataContainer> sequence = sequences.get(sample);
                 for (DataContainer dc : sequence) {
                     Get get = new Get(dc.getRow());
                     get.addColumn(dc.getFamily(), dc.getQualifier());
