@@ -38,6 +38,7 @@ public class Main {
     private static final int MAX_WAVES = 1000;
     private static final int MAX_SEQUENCES = 1;
     private static final int MIN_SEQUENCE_ITEMS = 3;
+    private static final int MAX_SEQUENCE_ITEMS = 20;
     // private static final double FREQ_SEQUENCE_RATIO = 0.5;
 
     private static List<List<DataContainer>> sequences;
@@ -123,7 +124,7 @@ public class Main {
         sequences = new ArrayList<>(MAX_SEQUENCES);
 
         for (int i = 0; i < MAX_SEQUENCES; i++) {
-            int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(20);
+            int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(MAX_SEQUENCE_ITEMS);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
 
             if (sequenceType == SequenceType.COLUMN) {
@@ -172,14 +173,17 @@ public class Main {
             if (sample < sequences.size()) {
                 List<DataContainer> sequence = sequences.get(sample);
                 for (DataContainer dc : sequence) {
+
+                    // TODO: measure request latency and throughtput
                     Get get = new Get(dc.getRow());
                     get.addColumn(dc.getFamily(), dc.getQualifier());
                     htables.get(Bytes.toString(dc.getTable())).get(get);
                 }
             } else {
-                int size = MIN_SEQUENCE_ITEMS + random.nextInt(20);
+                int size = MIN_SEQUENCE_ITEMS + random.nextInt(MAX_SEQUENCE_ITEMS);
                 for (int i = 0; i < size; i++) {
 
+                    // TODO: measure request latency and throughput
                     Get get = new Get(Bytes.toBytes(String.valueOf(random.nextInt(MAX_ROWS))));
                     String table = TABLES[random.nextInt(TABLES.length)];
                     String family = FAMILIES[random.nextInt(FAMILIES.length)];
