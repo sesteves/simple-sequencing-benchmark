@@ -38,7 +38,7 @@ public class Main {
     private static final int MAX_WAVES = 1000;
     private static final int MAX_SEQUENCES = 1;
     private static final int MIN_SEQUENCE_ITEMS = 3;
-    private static final double FREQ_SEQUENCE_RATIO = 0.5;
+    // private static final double FREQ_SEQUENCE_RATIO = 0.5;
 
     private static List<List<DataContainer>> sequences;
 
