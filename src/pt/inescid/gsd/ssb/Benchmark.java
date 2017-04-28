@@ -23,18 +23,15 @@ import org.apache.hadoop.hbase.util.Bytes;
 import pt.inescid.gsd.cachemining.DataContainer;
 import pt.inescid.gsd.cachemining.HTable;
 
-public class Main {
+public class Benchmark {
 
     private enum SequenceType {
         COLUMN, ROW
     }
 
-    private static final SequenceType sequenceType = SequenceType.ROW;
-
     private static final String statsFName = String.format("stats-benchmark-%d.csv", System.currentTimeMillis());
 
-    private static final String STATS_HEADER = "seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops,runtime"
-        + "timestamp,op,latency";
+    private static final String STATS_HEADER = "timestamp,op,latency,runtime";
 
     private static final String[] TABLES = { "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9" };
     private static final String[] FAMILIES = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
@@ -42,12 +39,6 @@ public class Main {
     private static final String[] QUALIFIERS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
     private static final int MAX_ROWS = 1000;
-    private static final int MAX_WAVES = 1000;
-    private static final int MAX_SEQUENCES = 1;
-    private static final int MIN_SEQUENCE_ITEMS = 3;
-    private static final int MAX_SEQUENCE_ITEMS = 20;
-    private static final int BLOCK_SIZE = 1000;
-    // private static final double FREQ_SEQUENCE_RATIO = 0.5;
 
     private static List<List<DataContainer>> sequences;
 
@@ -63,10 +54,23 @@ public class Main {
 
     private static BufferedWriter statsF;
 
+    private static String statsPrefix;
+
+    private static int sequencesSize;
+
+    private static SequenceType sequenceType = SequenceType.ROW;
+
+    private static int sequenceMinSize = 3;
+
+    private static int sequenceMaxSize = 10;
+
+    private static int blockSize;
+
     private static int zipfn = 100;
+
     private static double zipfe = 3;
 
-    private static String statsPrefix;
+    private static int waves;
 
     private static void init() throws IOException {
         final Configuration config = HBaseConfiguration.create();
@@ -89,11 +93,6 @@ public class Main {
 
             statsF = new BufferedWriter(new FileWriter(statsFName));
             statsF.write(STATS_HEADER);
-            statsF.newLine();
-
-            statsPrefix = sequenceType + "," + MIN_SEQUENCE_ITEMS + "," + MAX_SEQUENCE_ITEMS + "," + BLOCK_SIZE +
-                    "," + zipfn + "," + zipfe + "," + MAX_WAVES;
-            statsF.write(statsPrefix + ",,,,");
             statsF.newLine();
 
         } catch (Exception e) {
@@ -127,7 +126,7 @@ public class Main {
         if (!tablesCreated)
             return;
 
-        byte[] block = new byte[BLOCK_SIZE];
+        byte[] block = new byte[blockSize];
         random.nextBytes(block);
 
         System.out.println("Populating...");
@@ -147,10 +146,10 @@ public class Main {
     private static void generateFrequentSequences() {
         System.out.println("Generating frequent sequences...");
 
-        sequences = new ArrayList<>(MAX_SEQUENCES);
+        sequences = new ArrayList<>(sequencesSize);
 
-        for (int i = 0; i < MAX_SEQUENCES; i++) {
-            int sequenceSize = MIN_SEQUENCE_ITEMS + random.nextInt(MAX_SEQUENCE_ITEMS);
+        for (int i = 0; i < sequencesSize; i++) {
+            int sequenceSize = sequenceMinSize + random.nextInt(sequenceMaxSize);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
 
             if (sequenceType == SequenceType.COLUMN) {
@@ -192,14 +191,13 @@ public class Main {
         // exponent is linked to number of frequent sequences
         ZipfDistribution zipf = new ZipfDistribution(zipfn, zipfe);
 
-        for (int wave = 0; wave < MAX_WAVES; wave++) {
+        for (int wave = 0; wave < waves; wave++) {
 
             // htables.get(TABLES[0]).markTransaction();
             int sample = zipf.sample() - 1;
             if (sample < sequences.size()) {
                 List<DataContainer> sequence = sequences.get(sample);
                 for (DataContainer dc : sequence) {
-
                     // TODO: measure request latency and throughtput
                     Get get = new Get(dc.getRow());
                     get.addColumn(dc.getFamily(), dc.getQualifier());
@@ -209,11 +207,10 @@ public class Main {
                     long endTick = System.currentTimeMillis();
                     long diff = endTick - startTick;
 
-                    statsF.write(statsPrefix + ",," + endTick + ",g," + diff + "\n");
-
+                    statsF.write(endTick + ",g," + diff + ",\n");
                 }
             } else {
-                int size = MIN_SEQUENCE_ITEMS + random.nextInt(MAX_SEQUENCE_ITEMS);
+                int size = sequenceMinSize + random.nextInt(sequenceMaxSize);
                 for (int i = 0; i < size; i++) {
 
                     // TODO: measure request latency and throughput
@@ -229,6 +226,20 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
+        if(args.length != 8) {
+            System.err.println("Usage: Benchmark <frequentSequencesSize> <sequenceType> <sequenceMinSize> "
+                    + "<sequenceMaxSize> <blockSize> <zipfn> <zipfe> <waves>");
+            System.exit(1);
+        }
+        sequencesSize = Integer.parseInt(args[0]);
+        sequenceType = SequenceType.valueOf(args[1]);
+        sequenceMinSize = Integer.parseInt(args[2]);
+        sequenceMaxSize = Integer.parseInt(args[3]);
+        blockSize = Integer.parseInt(args[4]);
+        zipfn = Integer.parseInt(args[5]);
+        zipfe = Integer.parseInt(args[6]);
+        waves = Integer.parseInt(args[7]);
+
         generateFrequentSequences();
         init();
         populate();
@@ -237,7 +248,7 @@ public class Main {
         long endTick = System.currentTimeMillis();
         long diff = endTick - startTick;
         System.out.println("Time taken: " + diff);
-        statsF.write(statsPrefix + "," + diff + ",,,\n");
+        statsF.write(",,," + diff + "\n");
         statsF.close();
 
         // to close htable stats file
