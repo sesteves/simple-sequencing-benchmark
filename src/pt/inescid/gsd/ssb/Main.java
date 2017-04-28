@@ -31,9 +31,9 @@ public class Main {
 
     private static final SequenceType sequenceType = SequenceType.ROW;
 
-    private static final String statsFName = String.format("stats-%d.csv", System.currentTimeMillis());
+    private static final String statsFName = String.format("stats-benchmark-%d.csv", System.currentTimeMillis());
 
-    private static final String STATS_HEADER = "runtime,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops,"
+    private static final String STATS_HEADER = "seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops,runtime"
         + "timestamp,op,latency";
 
     private static final String[] TABLES = { "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9" };
@@ -66,6 +66,8 @@ public class Main {
     private static int zipfn = 100;
     private static double zipfe = 3;
 
+    private static String statsPrefix;
+
     private static void init() throws IOException {
         final Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", "ginja-a4");
@@ -88,8 +90,10 @@ public class Main {
             statsF = new BufferedWriter(new FileWriter(statsFName));
             statsF.write(STATS_HEADER);
             statsF.newLine();
-            statsF.write("," + sequenceType + "," + MIN_SEQUENCE_ITEMS + "," + MAX_SEQUENCE_ITEMS + "," + BLOCK_SIZE +
-                    "," + zipfn + "," + zipfe + "," + MAX_WAVES + ",,,");
+
+            statsPrefix = sequenceType + "," + MIN_SEQUENCE_ITEMS + "," + MAX_SEQUENCE_ITEMS + "," + BLOCK_SIZE +
+                    "," + zipfn + "," + zipfe + "," + MAX_WAVES;
+            statsF.write(statsPrefix + ",,,,");
             statsF.newLine();
 
         } catch (Exception e) {
@@ -205,7 +209,7 @@ public class Main {
                     long endTick = System.currentTimeMillis();
                     long diff = endTick - startTick;
 
-                    statsF.write(",,,,,,,," + endTick + ",g," + diff + "\n");
+                    statsF.write(statsPrefix + ",," + endTick + ",g," + diff + "\n");
 
                 }
             } else {
@@ -233,7 +237,12 @@ public class Main {
         long endTick = System.currentTimeMillis();
         long diff = endTick - startTick;
         System.out.println("Time taken: " + diff);
-        statsF.write(diff + ",,,,,,,,,\n");
+        statsF.write(statsPrefix + "," + diff + ",,,\n");
         statsF.close();
+
+        // to close htable stats file
+        for(HTable htable : htables.values()) {
+            htable.close();
+        }
     }
 }
