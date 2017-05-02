@@ -21,13 +21,13 @@ printheader=true
 
 for zipfe in 3; do
 
-  java -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize  pt.inescid.gsd.ssb.Main $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
+  java -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize  pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
 
   benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
   cachefname=$(ls stats-cache-* | tail -n 1)
 
   cfg="$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
-  scala -cp out Merge $header $printheader $cfg benchmarkfname cachefname >> fname
+  scala -cp out Merge $header $printheader $cfg $benchmarkfname $cachefname >> $fname
 
 
   if $printheader ; then
