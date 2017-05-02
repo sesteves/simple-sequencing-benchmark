@@ -17,6 +17,7 @@ cachesize='1000'
 fname=stats-all-$app-$enabled-$(date +%s).csv
 header="seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
 
+printheader=true
 
 for zipfe in 3; do
 
@@ -26,6 +27,12 @@ for zipfe in 3; do
   cachefname=$(ls stats-cache-* | tail -n 1)
 
   cfg="$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
-  scala Merge $header $cfg benchmarkfname cachefname
+  scala Merge $header $printheader $cfg benchmarkfname cachefname >> fname
+
+
+  if $printheader ; then
+    printheader=false
+  fi
+
 
 done
