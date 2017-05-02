@@ -22,10 +22,10 @@ object Merge {
       println(s"$cfgHeader,${head1},${head2}")
     }
 
-    1.to(math.max(file1.size -1, file2.size - 1)).foreach(i => {
+    1.to(math.max(file1.size - 1, file2.size - 1)).foreach(i => {
 
-      val part1 = if(i <= file1.size) file1(i) else ',' * cols1
-      val part2 = if(i <= file1.size) file2(i) else ',' * cols2
+      val part1 = if(i < file1.size) file1(i) else "," * cols1
+      val part2 = if(i < file2.size) file2(i) else "," * cols2
 
       println(s"$cfgParams,$part1,$part2")
     })

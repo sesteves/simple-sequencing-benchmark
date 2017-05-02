@@ -27,7 +27,7 @@ for zipfe in 3; do
   cachefname=$(ls stats-cache-* | tail -n 1)
 
   cfg="$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
-  scala Merge $header $printheader $cfg benchmarkfname cachefname >> fname
+  scala -cp out Merge $header $printheader $cfg benchmarkfname cachefname >> fname
 
 
   if $printheader ; then
