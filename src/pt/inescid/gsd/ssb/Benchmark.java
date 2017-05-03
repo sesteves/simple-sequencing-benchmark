@@ -14,10 +14,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import pt.inescid.gsd.cachemining.DataContainer;
@@ -42,8 +45,6 @@ public class Benchmark {
 
     private static List<List<DataContainer>> sequences;
 
-    private static HTablePool htablePool = null;
-
     private static Random random = new Random(100);
 
     private static HBaseAdmin hbaseAdmin;
@@ -53,8 +54,6 @@ public class Benchmark {
     private static boolean tablesCreated = false;
 
     private static BufferedWriter statsF;
-
-    private static String statsPrefix;
 
     private static int sequencesSize;
 
@@ -82,14 +81,10 @@ public class Benchmark {
             createTables();
 
             for (String table : TABLES) {
+                // htable.setAutoFlush(false);
+                // htable.setWriteBufferSize(1024 * 1024 * 12);
                 htables.put(table, new HTable(config, table, sequences));
             }
-
-            // htablePool = new HTablePool(config, 10);
-
-            // htable.setAutoFlush(false);
-            // htable.setWriteBufferSize(1024 * 1024 * 12);
-
 
             statsF = new BufferedWriter(new FileWriter(statsFName));
             statsF.write(STATS_HEADER);
@@ -113,15 +108,6 @@ public class Benchmark {
         }
     }
 
-    private static String randomString(final int length) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            char c = (char) (random.nextInt((int) (Character.MAX_VALUE)));
-            sb.append(c);
-        }
-        return sb.toString();
-    }
-
     private static void populate() throws IOException {
         if (!tablesCreated)
             return;
@@ -134,12 +120,13 @@ public class Benchmark {
             Put put = new Put(Bytes.toBytes(String.valueOf(row)));
             for (String family : FAMILIES) {
                 for (String qualifier : QUALIFIERS) {
-                    put.add(Bytes.toBytes(family), Bytes.toBytes(qualifier), block);
+                    put.addColumn(Bytes.toBytes(family), Bytes.toBytes(qualifier), block);
                 }
             }
 
-            for (String table : TABLES)
+            for (String table : TABLES) {
                 htables.get(table).put(put);
+            }
         }
     }
 
@@ -198,13 +185,12 @@ public class Benchmark {
             if (sample < sequences.size()) {
                 List<DataContainer> sequence = sequences.get(sample);
                 for (DataContainer dc : sequence) {
-                    // TODO: measure request latency and throughtput
                     Get get = new Get(dc.getRow());
                     get.addColumn(dc.getFamily(), dc.getQualifier());
 
-                    long startTick = System.currentTimeMillis();
+                    long startTick = System.nanoTime();
                     htables.get(dc.getTableStr()).get(get);
-                    long endTick = System.currentTimeMillis();
+                    long endTick = System.nanoTime();
                     long diff = endTick - startTick;
 
                     statsF.write(endTick + ",g," + diff + ",\n");
@@ -219,7 +205,13 @@ public class Benchmark {
                     String family = FAMILIES[random.nextInt(FAMILIES.length)];
                     String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
                     get.addColumn(Bytes.toBytes(family), Bytes.toBytes(qualifier));
+
+                    long startTick = System.nanoTime();
                     htables.get(table).get(get);
+                    long endTick = System.nanoTime();
+                    long diff = endTick - startTick;
+
+                    statsF.write(endTick + ",g," + diff + ",\n");
                 }
             }
         }
@@ -237,7 +229,7 @@ public class Benchmark {
         sequenceMaxSize = Integer.parseInt(args[3]);
         blockSize = Integer.parseInt(args[4]);
         zipfn = Integer.parseInt(args[5]);
-        zipfe = Integer.parseInt(args[6]);
+        zipfe = Double.parseDouble(args[6]);
         waves = Integer.parseInt(args[7]);
 
         generateFrequentSequences();
