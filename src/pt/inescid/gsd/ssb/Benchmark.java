@@ -199,7 +199,6 @@ public class Benchmark {
                 int size = sequenceMinSize + random.nextInt(sequenceMaxSize);
                 for (int i = 0; i < size; i++) {
 
-                    // TODO: measure request latency and throughput
                     Get get = new Get(Bytes.toBytes(String.valueOf(random.nextInt(MAX_ROWS))));
                     String table = TABLES[random.nextInt(TABLES.length)];
                     String family = FAMILIES[random.nextInt(FAMILIES.length)];
