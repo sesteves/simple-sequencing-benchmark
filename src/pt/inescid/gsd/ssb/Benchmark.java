@@ -130,13 +130,38 @@ public class Benchmark {
         }
     }
 
+    private static List<List<DataContainer>> generateBalancedSequenceTree(List<DataContainer> list, int depth,
+            final int maxDepth, final String table, final String family, final String qualifier) {
+
+        List<List<DataContainer>> result = new ArrayList<>();
+        if (depth > maxDepth) {
+            result.add(list);
+            return result;
+        }
+
+        String row = String.valueOf(random.nextInt(MAX_ROWS));
+        DataContainer dc = new DataContainer(table, row, family, qualifier);
+        list.add(dc);
+
+        List<List<DataContainer>> child1 = generateBalancedSequenceTree(new ArrayList(list), depth + 1,
+                maxDepth, table, family, qualifier);
+        List<List<DataContainer>> child2 =  generateBalancedSequenceTree(new ArrayList(list), depth + 1,
+                maxDepth, table, family, qualifier);
+
+        result.addAll(child1);
+        result.addAll(child2);
+
+        return result;
+    }
+
+
     private static void generateFrequentSequences() {
         System.out.println("Generating frequent sequences...");
 
         sequences = new ArrayList<>(sequencesSize);
 
         for (int i = 0; i < sequencesSize; i++) {
-            int sequenceSize = sequenceMinSize + random.nextInt(sequenceMaxSize);
+            int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
 
             if (sequenceType == SequenceType.COLUMN) {
@@ -151,22 +176,24 @@ public class Benchmark {
                     System.out.print(item + " ");
                 }
                 System.out.println();
-
+                sequences.add(sequence);
             } else if (sequenceType == SequenceType.ROW) {
-
                 String table = TABLES[random.nextInt(TABLES.length)];
                 String family = FAMILIES[random.nextInt(FAMILIES.length)];
                 String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
-                for (int j = 0; j < sequenceSize; j++) {
-                    String row = String.valueOf(random.nextInt(MAX_ROWS));
-                    DataContainer item = new DataContainer(table, row, family, qualifier);
-                    sequence.add(item);
-                    System.out.print(item + " ");
-                }
-                System.out.println();
-            }
 
-            sequences.add(sequence);
+                List<List<DataContainer>> sequences =  generateBalancedSequenceTree(new ArrayList<DataContainer>(), 0,
+                        sequenceSize, table, family, qualifier);
+                sequences.addAll(sequences);
+
+//                for (int j = 0; j < sequenceSize; j++) {
+//                    String row = String.valueOf(random.nextInt(MAX_ROWS));
+//                    DataContainer item = new DataContainer(table, row, family, qualifier);
+//                    sequence.add(item);
+//                    System.out.print(item + " ");
+//                }
+//                System.out.println();
+            }
         }
     }
 
