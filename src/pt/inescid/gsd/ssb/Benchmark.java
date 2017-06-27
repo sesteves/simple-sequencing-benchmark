@@ -130,18 +130,27 @@ public class Benchmark {
         }
     }
 
+    private static void printSequences(List<List<DataContainer>> sequences) {
+        for (List<DataContainer> sequence : sequences) {
+            for (DataContainer dc : sequence) {
+                System.out.print(dc + " ");
+            }
+            System.out.println();
+        }
+    }
+
     private static List<List<DataContainer>> generateBalancedSequenceTree(List<DataContainer> list, int depth,
             final int maxDepth, final String table, final String family, final String qualifier) {
-
-        List<List<DataContainer>> result = new ArrayList<>();
-        if (depth > maxDepth) {
-            result.add(list);
-            return result;
-        }
 
         String row = String.valueOf(random.nextInt(MAX_ROWS));
         DataContainer dc = new DataContainer(table, row, family, qualifier);
         list.add(dc);
+
+        List<List<DataContainer>> result = new ArrayList<>();
+        if (depth == maxDepth) {
+            result.add(list);
+            return result;
+        }
 
         List<List<DataContainer>> child1 = generateBalancedSequenceTree(new ArrayList(list), depth + 1,
                 maxDepth, table, family, qualifier);
@@ -182,9 +191,9 @@ public class Benchmark {
                 String family = FAMILIES[random.nextInt(FAMILIES.length)];
                 String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
 
-                List<List<DataContainer>> sequences =  generateBalancedSequenceTree(new ArrayList<DataContainer>(), 0,
-                        sequenceSize, table, family, qualifier);
-                sequences.addAll(sequences);
+                List<List<DataContainer>> sequenceTree =  generateBalancedSequenceTree(new ArrayList<DataContainer>(),
+                        0, 2, table, family, qualifier);
+                sequences.addAll(sequenceTree);
 
 //                for (int j = 0; j < sequenceSize; j++) {
 //                    String row = String.valueOf(random.nextInt(MAX_ROWS));
@@ -195,6 +204,8 @@ public class Benchmark {
 //                System.out.println();
             }
         }
+
+        printSequences(sequences);
     }
 
     private static void runWorkload() throws IOException {
