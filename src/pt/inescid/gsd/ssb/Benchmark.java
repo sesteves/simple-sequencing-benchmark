@@ -207,18 +207,16 @@ public class Benchmark {
         }
 
         Collections.shuffle(sequences);
-        printSequences(sequences);
+        // printSequences(sequences);
+        System.out.println("Generated " + sequences.size() + " sequences");
     }
 
     private static void runWorkload() throws IOException {
-
         System.out.println("Running workload...");
         Random random = new Random(100);
 
         // exponent is linked to number of frequent sequences
         ZipfDistribution zipf = new ZipfDistribution(zipfn, zipfe);
-
-        System.out.println("sequences size: " + sequences.size());
 
         for (int wave = 0; wave < waves; wave++) {
 
