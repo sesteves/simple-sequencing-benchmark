@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -205,6 +206,7 @@ public class Benchmark {
             }
         }
 
+        Collections.shuffle(sequences);
         printSequences(sequences);
     }
 
@@ -215,6 +217,8 @@ public class Benchmark {
 
         // exponent is linked to number of frequent sequences
         ZipfDistribution zipf = new ZipfDistribution(zipfn, zipfe);
+
+        System.out.println("sequences size: " + sequences.size());
 
         for (int wave = 0; wave < waves; wave++) {
 
@@ -251,6 +255,11 @@ public class Benchmark {
                     statsF.write(endTick + ",g," + diff + ",\n");
                 }
             }
+//            try {
+//                Thread.sleep(1);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 

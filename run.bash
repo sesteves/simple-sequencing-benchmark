@@ -2,12 +2,12 @@
 
 # benchmark params
 app=benchmark
-seqssize=1
+seqssize=10
 seqtype='ROW'
 seqminsize=3
-seqmaxsize=20
+seqmaxsize=10
 blocksize=1000
-zipfn=100
+zipfn=1000
 nops=1000
 
 # cache params
