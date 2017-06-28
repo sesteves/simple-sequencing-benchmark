@@ -13,15 +13,16 @@ nops=1000
 # cache params
 enabled='true'
 cachesize='1000'
+heuristic='fetch-progressively'
 
 fname=stats-all-$app-$enabled-$(date +%s).csv
 header="seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
 
 printheader=true
 
-for zipfe in 3; do
+for zipfe in 0.5 1.0 1.5 2.0 2.5 3; do
 
-  java -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize  pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
+  java -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
 
   benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
   cachefname=$(ls stats-cache-* | tail -n 1)
