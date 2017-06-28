@@ -192,7 +192,7 @@ public class Benchmark {
                 String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
 
                 List<List<DataContainer>> sequenceTree =  generateBalancedSequenceTree(new ArrayList<DataContainer>(),
-                        0, 2, table, family, qualifier);
+                        0, sequenceSize, table, family, qualifier);
                 sequences.addAll(sequenceTree);
 
 //                for (int j = 0; j < sequenceSize; j++) {
