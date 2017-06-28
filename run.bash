@@ -11,29 +11,29 @@ zipfn=1000
 nops=1000
 
 # cache params
-enabled='true'
 cachesize='1000'
 heuristic='fetch-progressively'
 
-fname=stats-all-$app-$enabled-$(date +%s).csv
-header="seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
-
+fname=stats-all-$app-$(date +%s).csv
+header="enabled,seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
 printheader=true
 
-for zipfe in 0.5 1.0 1.5 2.0 2.5 3; do
+for enabled in 'false' 'true'; do
+  for zipfe in 0.5 1.0 1.5 2.0 2.5 3; do
+    echo "Executing... (enabled: $enabled, zipfe: $zipfe)"
 
-  java -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
+    java -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
 
-  benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
-  cachefname=$(ls stats-cache-* | tail -n 1)
+    benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
+    cachefname=$(ls stats-cache-* | tail -n 1)
 
-  cfg="$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
-  scala -cp out Merge $header $printheader $cfg $benchmarkfname $cachefname >> $fname
-
-
-  if $printheader ; then
-    printheader=false
-  fi
+    cfg="$enabled,$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
+    scala -cp out Merge $header $printheader $cfg $benchmarkfname $cachefname >> $fname
 
 
+    if $printheader ; then
+      printheader=false
+    fi
+
+  done
 done
