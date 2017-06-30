@@ -8,13 +8,13 @@ seqminsize=3
 seqmaxsize=10
 blocksize=1000
 zipfn=1000
-nops=1000
+nops=10000
 
 # cache params
 cachesize='1000'
 
 fname=stats-all-$app-$(date +%s).csv
-header="enabled,seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
+header="enabled,heuristic,seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
 printheader=true
 
 function execute {
@@ -23,7 +23,7 @@ function execute {
   benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
   cachefname=$(ls stats-cache-* | tail -n 1)
 
-  cfg="$enabled,$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
+  cfg="$enabled,$heuristic,$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
   scala -cp out Merge $header $printheader $cfg $benchmarkfname $cachefname >> $fname
 
   if $printheader ; then
@@ -40,7 +40,7 @@ for enabled in 'false' 'true'; do
       done
     else
       echo "Executing... (enabled: false, zipfe: $zipfe)"
-      heuristic='none'
+      heuristic=''
       execute
     fi
   done
