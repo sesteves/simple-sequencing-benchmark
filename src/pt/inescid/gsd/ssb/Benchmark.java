@@ -303,7 +303,7 @@ public class Benchmark {
     }
 
     private static String encodeAccess(int rowInt, int tableIndex, int familyIndex, int qualifierIndex) {
-        return String.format("%05d", rowInt) + tableIndex + familyIndex + qualifierIndex;
+        return 9 + String.format("%05d", rowInt) + tableIndex + familyIndex + qualifierIndex;
     }
 
     public static void main(String[] args) throws IOException {
