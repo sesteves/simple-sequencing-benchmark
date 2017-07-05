@@ -1,5 +1,17 @@
 package pt.inescid.gsd.ssb;
 
+import org.apache.commons.math3.distribution.ZipfDistribution;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.util.Bytes;
+import pt.inescid.gsd.cachemining.DataContainer;
+import pt.inescid.gsd.cachemining.HTable;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,23 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.math3.distribution.ZipfDistribution;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTablePool;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.util.Bytes;
-
-import pt.inescid.gsd.cachemining.DataContainer;
-import pt.inescid.gsd.cachemining.HTable;
-
 public class Benchmark {
 
     private enum SequenceType {
@@ -35,12 +30,16 @@ public class Benchmark {
 
     private static final String statsFName = String.format("stats-benchmark-%d.csv", System.currentTimeMillis());
 
+    private static final String accessesFName = "accesses-%d.txt";
+
     private static final String STATS_HEADER = "timestamp,op,latency,runtime";
 
     private static final String[] TABLES = { "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9" };
     private static final String[] FAMILIES = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
             "r", "s", "t", "u", "v", "w", "x", "y", "z" };
     private static final String[] QUALIFIERS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
+    private static Map<String, Integer> accessIndexes;
 
     private static final int MAX_ROWS = 1000;
 
@@ -55,6 +54,8 @@ public class Benchmark {
     private static boolean tablesCreated = false;
 
     private static BufferedWriter statsF;
+
+    private static BufferedWriter accessesF;
 
     private static int sequencesSize;
 
@@ -72,6 +73,8 @@ public class Benchmark {
 
     private static int waves;
 
+    private static boolean outputAccesses = false;
+
     private static void init() throws IOException {
         final Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", "ginja-a4");
@@ -85,6 +88,21 @@ public class Benchmark {
                 // htable.setAutoFlush(false);
                 // htable.setWriteBufferSize(1024 * 1024 * 12);
                 htables.put(table, new HTable(config, table, sequences));
+            }
+
+            if (outputAccesses) {
+                // build indexes
+                accessIndexes = new HashMap<>();
+                for (int i = 0; i < TABLES.length; i++) {
+                    accessIndexes.put(TABLES[i], i);
+                }
+                for (int i = 0; i < FAMILIES.length; i++) {
+                    accessIndexes.put(FAMILIES[i], i);
+                }
+                for (int i = 0; i < QUALIFIERS.length; i++) {
+                    accessIndexes.put(QUALIFIERS[i], i);
+                }
+                accessesF = new BufferedWriter(new FileWriter(String.format(accessesFName, System.currentTimeMillis())));
             }
 
             statsF = new BufferedWriter(new FileWriter(statsFName));
@@ -234,15 +252,23 @@ public class Benchmark {
                     long diff = endTick - startTick;
 
                     statsF.write(endTick + ",g," + diff + ",\n");
+                    if (outputAccesses) {
+                        String value = encodeAccess(dc);
+                        accessesF.write(value + " -1 ");
+                    }
                 }
             } else {
-                int size = sequenceMinSize + random.nextInt(sequenceMaxSize);
+                int size = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
                 for (int i = 0; i < size; i++) {
 
-                    Get get = new Get(Bytes.toBytes(String.valueOf(random.nextInt(MAX_ROWS))));
-                    String table = TABLES[random.nextInt(TABLES.length)];
-                    String family = FAMILIES[random.nextInt(FAMILIES.length)];
-                    String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
+                    int rowInt = random.nextInt(MAX_ROWS);
+                    Get get = new Get(Bytes.toBytes(String.valueOf(rowInt)));
+                    int tableIndex = random.nextInt(TABLES.length);
+                    String table = TABLES[tableIndex];
+                    int familyIndex = random.nextInt(FAMILIES.length);
+                    String family = FAMILIES[familyIndex];
+                    int qualifierIndex = random.nextInt(QUALIFIERS.length);
+                    String qualifier = QUALIFIERS[qualifierIndex];
                     get.addColumn(Bytes.toBytes(family), Bytes.toBytes(qualifier));
 
                     long startTick = System.nanoTime();
@@ -251,8 +277,16 @@ public class Benchmark {
                     long diff = endTick - startTick;
 
                     statsF.write(endTick + ",g," + diff + ",\n");
+                    if (outputAccesses) {
+                        String value = encodeAccess(rowInt, tableIndex, familyIndex, qualifierIndex);
+                        accessesF.write(value + " -1 ");
+                    }
                 }
             }
+            if (outputAccesses) {
+                accessesF.write("-2\n");
+            }
+
 //            try {
 //                Thread.sleep(1);
 //            } catch (InterruptedException e) {
@@ -261,10 +295,21 @@ public class Benchmark {
         }
     }
 
+    private static String encodeAccess(DataContainer dc) {
+        int tableIndex = accessIndexes.get(dc.getTableStr());
+        int familyIndex = accessIndexes.get(dc.getFamilyStr());
+        int qualifierIndex = accessIndexes.get(dc.getQualifierStr());
+        return encodeAccess(Integer.parseInt(dc.getRowStr()), tableIndex, familyIndex, qualifierIndex);
+    }
+
+    private static String encodeAccess(int rowInt, int tableIndex, int familyIndex, int qualifierIndex) {
+        return String.format("%05d", rowInt) + tableIndex + familyIndex + qualifierIndex;
+    }
+
     public static void main(String[] args) throws IOException {
-        if(args.length != 8) {
+        if(args.length < 8) {
             System.err.println("Usage: Benchmark <frequentSequencesSize> <sequenceType> <sequenceMinSize> "
-                    + "<sequenceMaxSize> <blockSize> <zipfn> <zipfe> <waves>");
+                    + "<sequenceMaxSize> <blockSize> <zipfn> <zipfe> <waves> [<output-accesses>]");
             System.exit(1);
         }
         sequencesSize = Integer.parseInt(args[0]);
@@ -275,6 +320,9 @@ public class Benchmark {
         zipfn = Integer.parseInt(args[5]);
         zipfe = Double.parseDouble(args[6]);
         waves = Integer.parseInt(args[7]);
+        if (args.length > 8) {
+            outputAccesses = Boolean.parseBoolean(args[8]);
+        }
 
         generateFrequentSequences();
         init();
@@ -284,9 +332,10 @@ public class Benchmark {
         long endTick = System.currentTimeMillis();
         long diff = endTick - startTick;
         System.out.println("Time taken: " + diff);
+
+        accessesF.close();
         statsF.write(",,," + diff + "\n");
         statsF.close();
-
         // to close htable stats file
         for(HTable htable : htables.values()) {
             htable.close();
