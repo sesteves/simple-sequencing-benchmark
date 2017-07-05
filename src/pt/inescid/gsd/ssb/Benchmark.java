@@ -84,12 +84,6 @@ public class Benchmark {
             hbaseAdmin = new HBaseAdmin(config);
             createTables();
 
-            for (String table : TABLES) {
-                // htable.setAutoFlush(false);
-                // htable.setWriteBufferSize(1024 * 1024 * 12);
-                htables.put(table, new HTable(config, table, sequences));
-            }
-
             if (outputAccesses) {
                 // build indexes
                 accessIndexes = new HashMap<>();
@@ -108,6 +102,13 @@ public class Benchmark {
             statsF = new BufferedWriter(new FileWriter(statsFName));
             statsF.write(STATS_HEADER);
             statsF.newLine();
+
+            generateFrequentSequences();
+            for (String table : TABLES) {
+                // htable.setAutoFlush(false);
+                // htable.setWriteBufferSize(1024 * 1024 * 12);
+                htables.put(table, new HTable(config, table, sequences));
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -152,7 +153,7 @@ public class Benchmark {
     private static void printSequences(List<List<DataContainer>> sequences) {
         for (List<DataContainer> sequence : sequences) {
             for (DataContainer dc : sequence) {
-                System.out.print(dc + " ");
+                System.out.print(encodeAccess(dc) + " ");
             }
             System.out.println();
         }
@@ -186,8 +187,7 @@ public class Benchmark {
     private static void generateFrequentSequences() {
         System.out.println("Generating frequent sequences...");
 
-        sequences = new ArrayList<>(sequencesSize);
-
+        sequences = new ArrayList<>();
         for (int i = 0; i < sequencesSize; i++) {
             int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
@@ -225,7 +225,7 @@ public class Benchmark {
         }
 
         Collections.shuffle(sequences);
-        // printSequences(sequences);
+        printSequences(sequences);
         System.out.println("Generated " + sequences.size() + " sequences");
     }
 
@@ -303,7 +303,8 @@ public class Benchmark {
     }
 
     private static String encodeAccess(int rowInt, int tableIndex, int familyIndex, int qualifierIndex) {
-        return 9 + String.format("%05d", rowInt) + tableIndex + familyIndex + qualifierIndex;
+        // spmf only allows numbers with up to 9 digits
+        return 9 + String.format("%04d", rowInt) + tableIndex + String.format("%02d", familyIndex) + qualifierIndex;
     }
 
     public static void main(String[] args) throws IOException {
@@ -324,9 +325,9 @@ public class Benchmark {
             outputAccesses = Boolean.parseBoolean(args[8]);
         }
 
-        generateFrequentSequences();
         init();
         populate();
+
         long startTick = System.currentTimeMillis();
         runWorkload();
         long endTick = System.currentTimeMillis();
