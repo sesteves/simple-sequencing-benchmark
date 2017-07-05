@@ -84,13 +84,6 @@ public class Benchmark {
             hbaseAdmin = new HBaseAdmin(config);
             createTables();
 
-            sequences = new ArrayList<>();
-            for (String table : TABLES) {
-                // htable.setAutoFlush(false);
-                // htable.setWriteBufferSize(1024 * 1024 * 12);
-                htables.put(table, new HTable(config, table, sequences));
-            }
-
             if (outputAccesses) {
                 // build indexes
                 accessIndexes = new HashMap<>();
@@ -109,6 +102,13 @@ public class Benchmark {
             statsF = new BufferedWriter(new FileWriter(statsFName));
             statsF.write(STATS_HEADER);
             statsF.newLine();
+
+            generateFrequentSequences();
+            for (String table : TABLES) {
+                // htable.setAutoFlush(false);
+                // htable.setWriteBufferSize(1024 * 1024 * 12);
+                htables.put(table, new HTable(config, table, sequences));
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -187,6 +187,7 @@ public class Benchmark {
     private static void generateFrequentSequences() {
         System.out.println("Generating frequent sequences...");
 
+        sequences = new ArrayList<>();
         for (int i = 0; i < sequencesSize; i++) {
             int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
@@ -325,7 +326,6 @@ public class Benchmark {
 
         init();
         populate();
-        generateFrequentSequences();
 
         long startTick = System.currentTimeMillis();
         runWorkload();
