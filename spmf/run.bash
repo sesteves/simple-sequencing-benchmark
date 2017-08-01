@@ -35,5 +35,5 @@ for f in *.txt; do
         echo "$algo,${zipfe[count]},$minsup,$maxlength,$maxgap,$time,$memory,$sequences,$fsequences" >> $fname
       done
     done
-    count=${count}+1
+    count=$(($count + 1))
 done
