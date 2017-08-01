@@ -28,7 +28,7 @@ for f in *.txt; do
         fi
 
         time=$(grep -Po "(?<=Total time ~ )[[:digit:]]+(?= ms)" out)
-        memory=$(grep -Po "(?<=Max memory \(mb\) : )[.[:digit:]]+" out)
+        memory=$(grep -Po "Max memory \(mb\)\s?:\s?\K[[:digit:]]+" out)
         sequences=$(grep -Po "(?<=count : )[[:digit:]]+" out)
         fsequences=$(grep -E "(-.+-.+-)" result | wc -l)
 
