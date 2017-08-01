@@ -12,7 +12,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 import pt.inescid.gsd.cachemining.DataContainer;
 import pt.inescid.gsd.cachemining.HTable;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,6 +106,7 @@ public class Benchmark {
             statsF.newLine();
 
             generateFrequentSequences();
+            loadExtraSequences();
             for (String table : TABLES) {
                 // htable.setAutoFlush(false);
                 // htable.setWriteBufferSize(1024 * 1024 * 12);
@@ -111,6 +114,23 @@ public class Benchmark {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void loadExtraSequences() {
+        String line;
+        try {
+            BufferedReader in = new BufferedReader(new FileReader("result"));
+            while((line = in.readLine()) != null) {
+                String[] items = line.substring(0, line.indexOf("#")).replace("-1 ", "").split(" ");
+                List<DataContainer> seq = new ArrayList<>();
+                for(String item : items) {
+                    seq.add(decodeAccess(item.trim()));
+                }
+                sequences.add(seq);
+            }
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -303,8 +323,17 @@ public class Benchmark {
     }
 
     private static String encodeAccess(int rowInt, int tableIndex, int familyIndex, int qualifierIndex) {
-        // spmf only allows numbers with up to 9 digits
+        // spmf only allows ints
         return 9 + String.format("%04d", rowInt) + tableIndex + String.format("%02d", familyIndex) + qualifierIndex;
+    }
+
+    private static DataContainer decodeAccess(String dcStr) {
+        String row = dcStr.substring(1,5);
+        int tableIndex = Integer.parseInt(dcStr.substring(5,6));
+        int familyIndex = Integer.parseInt(dcStr.substring(6,8));
+        int qualifierIndex = Integer.parseInt(dcStr.substring(8,9));
+
+        return new DataContainer(TABLES[tableIndex], row, FAMILIES[familyIndex], QUALIFIERS[qualifierIndex]);
     }
 
     public static void main(String[] args) throws IOException {
