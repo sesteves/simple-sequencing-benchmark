@@ -29,7 +29,7 @@ for f in *.txt; do
 
         time=$(grep -Po "(?<=Total time ~ )[[:digit:]]+(?= ms)" out)
         memory=$(grep -Po "Max memory \(mb\)\s?:\s?\K[[:digit:]]+" out)
-        sequences=$(grep -Po "(?<=sequences count : )[[:digit:]]+" out)
+        sequences=$(grep -Po "(?<=count : )[[:digit:]]+" out | head -n 1)
         fsequences=$(grep -E "(-.+-.+-)" result | wc -l)
 
         echo "$algo,${zipfe[count]},$minsup,$maxlength,$maxgap,$time,$memory,$sequences,$fsequences" >> $fname
