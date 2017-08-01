@@ -10,7 +10,7 @@ count=0
 fname=stats-mining-$app-$(date +%s).csv
 header="algo,zipfe,minsup,maxlength,maxgap,time,memory,sequences,fsequences"
 
-echo $header >> fname
+echo $header >> $fname
 
 for algo in GSP SPADE SPAM PrefixSpan ClaSP MaxSP VMSP VGEN; do
     for f in *.txt; do
@@ -30,7 +30,7 @@ for algo in GSP SPADE SPAM PrefixSpan ClaSP MaxSP VMSP VGEN; do
         sequences=$(grep -Po "(?<=count : )[[:digit:]]+" out)
         fsequences=$(grep -E "(-.+-.+-)" result | wc -l)
 
-        echo "$algo,${zipfe[count]},$minsup,$maxlength,$maxgap,$time,$memory,$sequences,$fsequences" >> fname
+        echo "$algo,${zipfe[count]},$minsup,$maxlength,$maxgap,$time,$memory,$sequences,$fsequences" >> $fname
       done
       count=${count}+1
     done
