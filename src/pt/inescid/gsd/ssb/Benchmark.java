@@ -363,7 +363,9 @@ public class Benchmark {
         long diff = endTick - startTick;
         System.out.println("Time taken: " + diff);
 
-        accessesF.close();
+        if(outputAccesses) {
+            accessesF.close();
+        }
         statsF.write(",,," + diff + "\n");
         statsF.close();
         // to close htable stats file
