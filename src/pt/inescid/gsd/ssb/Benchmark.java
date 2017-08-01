@@ -45,7 +45,7 @@ public class Benchmark {
 
     private static final int MAX_ROWS = 1000;
 
-    private static List<List<DataContainer>> sequences;
+    private static List<List<DataContainer>> sequences, extraSequences;
 
     private static Random random = new Random(100);
 
@@ -110,7 +110,7 @@ public class Benchmark {
             for (String table : TABLES) {
                 // htable.setAutoFlush(false);
                 // htable.setWriteBufferSize(1024 * 1024 * 12);
-                htables.put(table, new HTable(config, table, sequences));
+                htables.put(table, new HTable(config, table, extraSequences));
             }
 
         } catch (Exception e) {
@@ -128,7 +128,7 @@ public class Benchmark {
                 for(String item : items) {
                     seq.add(decodeAccess(item.trim()));
                 }
-                sequences.add(seq);
+                extraSequences.add(seq);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -208,6 +208,7 @@ public class Benchmark {
         System.out.println("Generating frequent sequences...");
 
         sequences = new ArrayList<>();
+        extraSequences = new ArrayList<>();
         for (int i = 0; i < sequencesSize; i++) {
             int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
             List<DataContainer> sequence = new ArrayList<>(sequenceSize);
@@ -225,6 +226,7 @@ public class Benchmark {
                 }
                 System.out.println();
                 sequences.add(sequence);
+                extraSequences.add(sequence);
             } else if (sequenceType == SequenceType.ROW) {
                 String table = TABLES[random.nextInt(TABLES.length)];
                 String family = FAMILIES[random.nextInt(FAMILIES.length)];
@@ -233,6 +235,7 @@ public class Benchmark {
                 List<List<DataContainer>> sequenceTree =  generateBalancedSequenceTree(new ArrayList<DataContainer>(),
                         0, sequenceSize, table, family, qualifier);
                 sequences.addAll(sequenceTree);
+                extraSequences.addAll(sequenceTree);
 
 //                for (int j = 0; j < sequenceSize; j++) {
 //                    String row = String.valueOf(random.nextInt(MAX_ROWS));
