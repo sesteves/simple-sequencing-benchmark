@@ -12,9 +12,10 @@ header="algo,zipfe,minsup,maxlength,maxgap,time,memory,sequences,fsequences"
 
 echo $header >> $fname
 
-for algo in GSP SPADE SPAM PrefixSpan ClaSP MaxSP VMSP VGEN; do
-    echo "trying algorithm $algo..."
-    for f in *.txt; do
+for f in *.txt; do
+  for algo in GSP SPADE SPAM PrefixSpan ClaSP MaxSP VMSP VGEN; do
+    echo "trying file $count and algorithm $algo..."
+
       for minsup in 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.2 0.3 0.4 0.5; do
         if [ $algo = VMSP ] || [ $algo = VGEN ] ; then
           java -jar spmf.jar run $algo $f result $minsup $maxlength $maxgap > out
@@ -33,6 +34,6 @@ for algo in GSP SPADE SPAM PrefixSpan ClaSP MaxSP VMSP VGEN; do
 
         echo "$algo,${zipfe[count]},$minsup,$maxlength,$maxgap,$time,$memory,$sequences,$fsequences" >> $fname
       done
-      count=${count}+1
     done
+    count=${count}+1
 done
