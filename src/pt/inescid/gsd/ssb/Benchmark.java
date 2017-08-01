@@ -245,7 +245,7 @@ public class Benchmark {
         }
 
         Collections.shuffle(sequences);
-        printSequences(sequences);
+        // printSequences(sequences);
         System.out.println("Generated " + sequences.size() + " sequences");
     }
 
