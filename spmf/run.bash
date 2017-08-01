@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 app=benchmark
+minlength=3
 maxlength=15
 maxgap=1
 zipfe=(0.5 1.0 1.5 2.0 2.5 3)
@@ -11,10 +12,18 @@ header="algo,zipfe,minsup,maxlength,maxgap,time,memory,sequences,fsequences"
 
 echo $header >> fname
 
-for algo in ; do
+for algo in GSP SPADE SPAM PrefixSpan ClaSP MaxSP VMSP VGEN; do
     for f in *.txt; do
       for minsup in 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.2 0.3 0.4 0.5; do
-        java -jar spmf.jar run VMSP $f result $minsup $maxlength $maxgap > out
+        if [ $algo = VMSP ] || [ $algo = VGEN ] ; then
+          java -jar spmf.jar run $algo $f result $minsup $maxlength $maxgap > out
+        elif [ $algo = SPAM ] ; then
+          java -jar spmf.jar run $algo $f result $minsup $minlength $maxlength $maxgap > out
+        elif [ $algo = PrefixSpan ]; then
+          java -jar spmf.jar run $algo $f result $minsup $maxlength > out
+        else
+          java -jar spmf.jar run $algo $f result $minsup > out
+        fi
 
         time=$(grep -Po "(?<=Total time ~ )[[:digit:]]+(?= ms)" out)
         memory=$(grep -Po "(?<=Max memory \(mb\) : )[.[:digit:]]+" out)
