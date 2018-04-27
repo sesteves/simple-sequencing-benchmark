@@ -45,6 +45,8 @@ public class Benchmark {
 
     private static final int MAX_ROWS = 1000;
 
+    private static final double WAVE_CHUNK_PERCENTAGE = 0.1;
+
     private static List<List<DataContainer>> sequences, extraSequences;
 
     private static Random random = new Random(100);
@@ -74,6 +76,8 @@ public class Benchmark {
     private static double zipfe = 3;
 
     private static int waves;
+
+    private static int waveChunk;
 
     private static boolean outputAccesses = false;
 
@@ -256,7 +260,7 @@ public class Benchmark {
         System.out.println("Running workload...");
         Random random = new Random(100);
 
-        // exponent is linked to number of frequent sequences
+        // exponent is linked to the number of frequent sequences
         ZipfDistribution zipf = new ZipfDistribution(zipfn, zipfe);
 
         for (int wave = 0; wave < waves; wave++) {
@@ -309,6 +313,12 @@ public class Benchmark {
             if (outputAccesses) {
                 accessesF.write("-2\n");
             }
+            if (wave % waveChunk == 0) {
+                // TODO
+                // run VMSP algo
+                // collect and decode result
+                // refresh sequences in sequence engine
+            }
 
 //            try {
 //                Thread.sleep(1);
@@ -353,6 +363,7 @@ public class Benchmark {
         zipfn = Integer.parseInt(args[5]);
         zipfe = Double.parseDouble(args[6]);
         waves = Integer.parseInt(args[7]);
+        waveChunk = (int)(waves * WAVE_CHUNK_PERCENTAGE);
         if (args.length > 8) {
             outputAccesses = Boolean.parseBoolean(args[8]);
         }
