@@ -81,7 +81,7 @@ public class Benchmark {
 
     private static boolean outputAccesses = false;
 
-    private static void init() throws IOException {
+    private static void init() {
         final Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", "ginja-a4");
         try {
