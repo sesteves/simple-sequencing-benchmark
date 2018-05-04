@@ -1,5 +1,6 @@
 package pt.inescid.gsd.ssb;
 
+import ca.pfv.spmf.algorithms.sequentialpatterns.spam.AlgoVMSP;
 import org.apache.commons.math3.distribution.ZipfDistribution;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -32,7 +33,7 @@ public class Benchmark {
 
     private static final String statsFName = String.format("stats-benchmark-%d.csv", System.currentTimeMillis());
 
-    private static final String accessesFName = "accesses-%d.txt";
+    private static final String accessesFNameMask = "accesses-%d.txt";
 
     private static final String STATS_HEADER = "timestamp,op,latency,runtime";
 
@@ -60,6 +61,8 @@ public class Benchmark {
     private static BufferedWriter statsF;
 
     private static BufferedWriter accessesF;
+
+    private static String accessesFName;
 
     private static int sequencesSize;
 
@@ -102,7 +105,8 @@ public class Benchmark {
                 for (int i = 0; i < QUALIFIERS.length; i++) {
                     accessIndexes.put(QUALIFIERS[i], i);
                 }
-                accessesF = new BufferedWriter(new FileWriter(String.format(accessesFName, System.currentTimeMillis())));
+                accessesFName = String.format(accessesFName, System.currentTimeMillis());
+                accessesF = new BufferedWriter(new FileWriter(accessesFName));
             }
 
             statsF = new BufferedWriter(new FileWriter(statsFName));
@@ -315,9 +319,33 @@ public class Benchmark {
             }
             if (wave % waveChunk == 0) {
                 // TODO
-                // run VMSP algo
-                // collect and decode result
-                // refresh sequences in sequence engine
+
+                // run data mining
+                AlgoVMSP algo = new AlgoVMSP();
+                accessesF.flush();
+                String resultFName = "result";
+                algo.runAlgorithm(accessesFName, resultFName, 0.01);
+
+                List<List<DataContainer>> seqs = new ArrayList<>();
+                BufferedReader br = new BufferedReader(new FileReader(resultFName));
+                String line;
+                while((line = br.readLine()) != null) {
+                    String[] items = line.split(" -1 ");
+                    if(items.length <= 2) {
+                        continue;
+                    }
+
+                    List<DataContainer> seq = new ArrayList<>();
+                    // ignore last element of array
+                    for(int i = 0; i < items.length - 1; i++) {
+                        seq.add(decodeAccess(items[i]));
+                    }
+                    seqs.add(seq);
+                }
+                br.close();
+
+                // update frequent sequences
+                htables.get(0).updateSequences(seqs);
             }
 
 //            try {
