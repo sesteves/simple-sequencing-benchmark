@@ -42,13 +42,17 @@ public class Benchmark {
             "r", "s", "t", "u", "v", "w", "x", "y", "z" };
     private static final String[] QUALIFIERS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+    private static final int SETS_OF_SEQUENCES = 3;
+
     private static Map<String, Integer> accessIndexes;
 
     private static final int MAX_ROWS = 1000;
 
     private static final double WAVE_CHUNK_PERCENTAGE = 0.1;
 
-    private static List<List<DataContainer>> sequences, extraSequences;
+    private static List<List<List<DataContainer>>> sequences;
+
+    private static List<List<DataContainer>> extraSequences;
 
     private static Random random = new Random(100);
 
@@ -79,8 +83,6 @@ public class Benchmark {
     private static double zipfe = 3;
 
     private static int waves;
-
-    private static int waveChunk;
 
     private static boolean outputAccesses = false;
 
@@ -217,33 +219,39 @@ public class Benchmark {
 
         sequences = new ArrayList<>();
         extraSequences = new ArrayList<>();
-        for (int i = 0; i < sequencesSize; i++) {
-            int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
-            List<DataContainer> sequence = new ArrayList<>(sequenceSize);
 
-            if (sequenceType == SequenceType.COLUMN) {
-                String row = String.valueOf(random.nextInt(MAX_ROWS));
-                System.out.print("SEQ " + i + ": ");
-                for (int j = 0; j < sequenceSize; j++) {
+        for(int s = 0; s < SETS_OF_SEQUENCES; s++) {
+
+            List<List<DataContainer>> sequences = new ArrayList<>();
+            Benchmark.sequences.add(sequences);
+
+            for (int i = 0; i < sequencesSize; i++) {
+                int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
+                List<DataContainer> sequence = new ArrayList<>(sequenceSize);
+
+                if (sequenceType == SequenceType.COLUMN) {
+                    String row = String.valueOf(random.nextInt(MAX_ROWS));
+                    System.out.print("SEQ " + i + ": ");
+                    for (int j = 0; j < sequenceSize; j++) {
+                        String table = TABLES[random.nextInt(TABLES.length)];
+                        String family = FAMILIES[random.nextInt(FAMILIES.length)];
+                        String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
+                        DataContainer item = new DataContainer(table, row, family, qualifier);
+                        sequence.add(item);
+                        System.out.print(item + " ");
+                    }
+                    System.out.println();
+                    sequences.add(sequence);
+                    extraSequences.add(sequence);
+                } else if (sequenceType == SequenceType.ROW) {
                     String table = TABLES[random.nextInt(TABLES.length)];
                     String family = FAMILIES[random.nextInt(FAMILIES.length)];
                     String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
-                    DataContainer item = new DataContainer(table, row, family, qualifier);
-                    sequence.add(item);
-                    System.out.print(item + " ");
-                }
-                System.out.println();
-                sequences.add(sequence);
-                extraSequences.add(sequence);
-            } else if (sequenceType == SequenceType.ROW) {
-                String table = TABLES[random.nextInt(TABLES.length)];
-                String family = FAMILIES[random.nextInt(FAMILIES.length)];
-                String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
 
-                List<List<DataContainer>> sequenceTree =  generateBalancedSequenceTree(new ArrayList<DataContainer>(),
-                        0, sequenceSize, table, family, qualifier);
-                sequences.addAll(sequenceTree);
-                extraSequences.addAll(sequenceTree);
+                    List<List<DataContainer>> sequenceTree = generateBalancedSequenceTree(new ArrayList<DataContainer>(),
+                            0, sequenceSize, table, family, qualifier);
+                    sequences.addAll(sequenceTree);
+                    extraSequences.addAll(sequenceTree);
 
 //                for (int j = 0; j < sequenceSize; j++) {
 //                    String row = String.valueOf(random.nextInt(MAX_ROWS));
@@ -252,12 +260,13 @@ public class Benchmark {
 //                    System.out.print(item + " ");
 //                }
 //                System.out.println();
+                }
             }
-        }
 
-        Collections.shuffle(sequences);
-        // printSequences(sequences);
-        System.out.println("Generated " + sequences.size() + " sequences");
+            Collections.shuffle(sequences);
+            // printSequences(sequences);
+            System.out.println("Generated " + sequences.size() + " sequences");
+        }
     }
 
     private static void runWorkload() throws IOException {
@@ -266,6 +275,11 @@ public class Benchmark {
 
         // exponent is linked to the number of frequent sequences
         ZipfDistribution zipf = new ZipfDistribution(zipfn, zipfe);
+
+        int index = 0;
+        List<List<DataContainer>> sequences = Benchmark.sequences.get(index++);
+        int wavesSet = waves / SETS_OF_SEQUENCES;
+        int waveChunk = (int)(0.2 * wavesSet);
 
         for (int wave = 0; wave < waves; wave++) {
 
@@ -317,7 +331,15 @@ public class Benchmark {
             if (outputAccesses) {
                 accessesF.write("-2\n");
             }
-            if (wave % waveChunk == 0) {
+            if(wave % wavesSet == 0) {
+                // TODO
+                sequences = Benchmark.sequences.get(index++);
+                if(outputAccesses) {
+                    accessesF.close();
+                    accessesFName = String.format(accessesFName, System.currentTimeMillis());
+                    accessesF = new BufferedWriter(new FileWriter(accessesFName));
+                }
+            } else if (wave % waveChunk == 0) {
                 // TODO
 
                 // run data mining
@@ -391,7 +413,6 @@ public class Benchmark {
         zipfn = Integer.parseInt(args[5]);
         zipfe = Double.parseDouble(args[6]);
         waves = Integer.parseInt(args[7]);
-        waveChunk = (int)(waves * WAVE_CHUNK_PERCENTAGE);
         if (args.length > 8) {
             outputAccesses = Boolean.parseBoolean(args[8]);
         }
