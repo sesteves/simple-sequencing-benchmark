@@ -281,7 +281,7 @@ public class Benchmark {
         int wavesSet = waves / SETS_OF_SEQUENCES;
         int waveChunk = (int)(0.2 * wavesSet);
 
-        for (int wave = 0; wave < waves; wave++) {
+        for (int wave = 1; wave <= waves; wave++) {
 
             // htables.get(TABLES[0]).markTransaction();
             int sample = zipf.sample() - 1;
