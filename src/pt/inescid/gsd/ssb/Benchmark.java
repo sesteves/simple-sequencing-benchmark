@@ -435,5 +435,6 @@ public class Benchmark {
         for(HTable htable : htables.values()) {
             htable.close();
         }
+        System.exit(0);
     }
 }

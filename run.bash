@@ -18,7 +18,7 @@ header="enabled,heuristic,seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn
 printheader=true
 
 function execute {
-  java -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
+  java -Xmx10g -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
 
   benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
   cachefname=$(ls stats-cache-* | tail -n 1)
@@ -35,6 +35,10 @@ for enabled in 'false' 'true'; do
   for zipfe in 0.5 1.0 1.5 2.0 2.5 3; do
     if $enabled ; then
       for heuristic in 'fetch-all' 'fetch-top-n' 'fetch-progressively'; do
+        # for cachesize in 2000 4000 8000 16000 32000 64000 128000 256000; do
+        # for cachesize in 30 60 120 240 480 960 1920 3840; do
+        # for cachesize in 1500; do
+
         echo "Executing... (enabled: true, zipfe: $zipfe, heuristic: $heuristic)"
         execute
       done
