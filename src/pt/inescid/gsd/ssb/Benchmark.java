@@ -278,7 +278,7 @@ public class Benchmark {
 
         int index = 0;
         List<List<DataContainer>> sequences = Benchmark.sequences.get(index++);
-        int wavesSet = waves / SETS_OF_SEQUENCES;
+        double wavesSet = Math.ceil((double)waves / (double)SETS_OF_SEQUENCES);
         int waveChunk = (int)(0.2 * wavesSet);
 
         for (int wave = 1; wave <= waves; wave++) {
