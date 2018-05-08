@@ -367,7 +367,7 @@ public class Benchmark {
                 br.close();
 
                 // update frequent sequences
-                htables.get(0).updateSequences(seqs);
+                htables.values().iterator().next().updateSequences(seqs);
             }
 
 //            try {
