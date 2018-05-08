@@ -107,7 +107,7 @@ public class Benchmark {
                 for (int i = 0; i < QUALIFIERS.length; i++) {
                     accessIndexes.put(QUALIFIERS[i], i);
                 }
-                accessesFName = String.format(accessesFName, System.currentTimeMillis());
+                accessesFName = String.format(accessesFNameMask, System.currentTimeMillis());
                 accessesF = new BufferedWriter(new FileWriter(accessesFName));
             }
 
@@ -336,7 +336,7 @@ public class Benchmark {
                 sequences = Benchmark.sequences.get(index++);
                 if(outputAccesses) {
                     accessesF.close();
-                    accessesFName = String.format(accessesFName, System.currentTimeMillis());
+                    accessesFName = String.format(accessesFNameMask, System.currentTimeMillis());
                     accessesF = new BufferedWriter(new FileWriter(accessesFName));
                 }
             } else if (wave % waveChunk == 0) {
