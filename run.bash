@@ -18,7 +18,7 @@ header="enabled,heuristic,seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn
 printheader=true
 
 function execute {
-  java -Xmx10g -cp lib/*:../cache-mining/lib/*:resources/:out/:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
+  java -Xmx10g -cp lib/*:../cache-mining/lib/*:resources/:out/:spmf/spmf.jar:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
 
   benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
   cachefname=$(ls stats-cache-* | tail -n 1)
