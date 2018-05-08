@@ -391,7 +391,7 @@ public class Benchmark {
     }
 
     private static DataContainer decodeAccess(String dcStr) {
-        String row = dcStr.substring(1,5);
+        String row = dcStr.substring(1,5).replaceFirst("^0+(?!$)", "");
         int tableIndex = Integer.parseInt(dcStr.substring(5,6));
         int familyIndex = Integer.parseInt(dcStr.substring(6,8));
         int qualifierIndex = Integer.parseInt(dcStr.substring(8,9));
