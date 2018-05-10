@@ -14,16 +14,16 @@ nops=10000
 cachesize='1000'
 
 fname=stats-all-$app-$(date +%s).csv
-header="enabled,heuristic,seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
+header="seqssize,seqtype,seqminsize,seqmaxsize,blocksize,zipfn,zipfe,nops"
 printheader=true
 
 function execute {
-  java -Xmx10g -cp lib/*:../cache-mining/lib/*:resources/:out/:spmf/spmf.jar:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops
+  java -Xmx10g -cp lib/*:../cache-mining/lib/*:resources/:out/:spmf/spmf.jar:. -Denabled=$enabled -Dcache-size=$cachesize -Dheuristic=$heuristic pt.inescid.gsd.ssb.Benchmark $seqssize $seqtype $seqminsize $seqmaxsize $blocksize $zipfn $zipfe $nops true
 
   benchmarkfname=$(ls stats-benchmark-* | tail -n 1)
   cachefname=$(ls stats-cache-* | tail -n 1)
 
-  cfg="$enabled,$heuristic,$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
+  cfg="$seqssize,$seqtype,$seqminsize,$seqmaxsize,$blocksize,$zipfn,$zipfe,$nops"
   scala -cp out Merge $header $printheader $cfg $benchmarkfname $cachefname >> $fname
 
   if $printheader ; then
