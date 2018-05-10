@@ -222,7 +222,7 @@ public class Benchmark {
 
         for(int s = 0; s < SETS_OF_SEQUENCES; s++) {
 
-            List<List<DataContainer>> sequences = new ArrayList<>();
+            List<List<DataContainer>> sequences = new ArrayList<>(sequencesSize);
             Benchmark.sequences.add(sequences);
 
             for (int i = 0; i < sequencesSize; i++) {
