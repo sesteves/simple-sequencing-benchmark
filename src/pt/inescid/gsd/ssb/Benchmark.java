@@ -332,16 +332,15 @@ public class Benchmark {
                 accessesF.write("-2\n");
             }
             if(wave % wavesSet == 0) {
-                // TODO
                 sequences = Benchmark.sequences.get(index++);
                 if(outputAccesses) {
                     accessesF.close();
                     accessesFName = String.format(accessesFNameMask, System.currentTimeMillis());
                     accessesF = new BufferedWriter(new FileWriter(accessesFName));
                 }
+                // clear cache
+                htables.values().iterator().next().clearCache();
             } else if (wave % waveChunk == 0) {
-                // TODO
-
                 // run data mining
                 AlgoVMSP algo = new AlgoVMSP();
                 accessesF.flush();
