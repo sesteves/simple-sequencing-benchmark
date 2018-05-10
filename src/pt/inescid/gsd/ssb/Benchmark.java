@@ -35,7 +35,7 @@ public class Benchmark {
 
     private static final String accessesFNameMask = "accesses-%d.txt";
 
-    private static final String STATS_HEADER = "timestamp,op,latency,runtime";
+    private static final String STATS_HEADER = "timestamp,seqset,op,latency,runtime";
 
     private static final String[] TABLES = { "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9" };
     private static final String[] FAMILIES = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
@@ -48,7 +48,7 @@ public class Benchmark {
 
     private static final int MAX_ROWS = 1000;
 
-    private static final double WAVE_CHUNK_PERCENTAGE = 0.1;
+    private static final double WAVE_CHUNK_PERCENTAGE = 0.2;
 
     private static List<List<List<DataContainer>>> sequences;
 
@@ -279,7 +279,7 @@ public class Benchmark {
         int index = 0;
         List<List<DataContainer>> sequences = Benchmark.sequences.get(index++);
         double wavesSet = Math.ceil((double)waves / (double)SETS_OF_SEQUENCES);
-        int waveChunk = (int)(0.2 * wavesSet);
+        int waveChunk = (int)(WAVE_CHUNK_PERCENTAGE * wavesSet);
 
         for (int wave = 1; wave <= waves; wave++) {
 
@@ -296,7 +296,7 @@ public class Benchmark {
                     long endTick = System.nanoTime();
                     long diff = endTick - startTick;
 
-                    statsF.write(endTick + ",g," + diff + ",\n");
+                    statsF.write(endTick + "," + index + ",g," + diff + ",\n");
                     if (outputAccesses) {
                         String value = encodeAccess(dc);
                         accessesF.write(value + " -1 ");
@@ -321,7 +321,7 @@ public class Benchmark {
                     long endTick = System.nanoTime();
                     long diff = endTick - startTick;
 
-                    statsF.write(endTick + ",g," + diff + ",\n");
+                    statsF.write(endTick + "," + index + ",g," + diff + ",\n");
                     if (outputAccesses) {
                         String value = encodeAccess(rowInt, tableIndex, familyIndex, qualifierIndex);
                         accessesF.write(value + " -1 ");
@@ -429,7 +429,7 @@ public class Benchmark {
         if(outputAccesses) {
             accessesF.close();
         }
-        statsF.write(",,," + diff + "\n");
+        statsF.write(",,,," + diff + "\n");
         statsF.close();
         // to close htable stats file
         for(HTable htable : htables.values()) {
