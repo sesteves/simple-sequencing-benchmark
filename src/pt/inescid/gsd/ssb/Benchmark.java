@@ -42,7 +42,7 @@ public class Benchmark {
             "r", "s", "t", "u", "v", "w", "x", "y", "z" };
     private static final String[] QUALIFIERS = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
-    private static final int SETS_OF_SEQUENCES = 3;
+    private static final int SETS_OF_SEQUENCES = 5;
 
     private static Map<String, Integer> accessIndexes;
 
