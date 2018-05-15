@@ -278,6 +278,7 @@ public class Benchmark {
 
         int index = 0;
         List<List<DataContainer>> sequences = Benchmark.sequences.get(index++);
+        boolean newFile = true;
         double wavesSet = Math.ceil((double)waves / (double)SETS_OF_SEQUENCES);
         int waveChunk = (int)(WAVE_CHUNK_PERCENTAGE * wavesSet);
 
@@ -341,8 +342,7 @@ public class Benchmark {
                     accessesFName = String.format(accessesFNameMask, System.currentTimeMillis());
                     accessesF = new BufferedWriter(new FileWriter(accessesFName));
                 }
-                // clear cache
-                htables.values().iterator().next().clearCache();
+                newFile = true;
             } else if (wave % waveChunk == 0) {
                 // run data mining
                 AlgoVMSP algo = new AlgoVMSP();
@@ -370,6 +370,12 @@ public class Benchmark {
 
                 // update frequent sequences
                 htables.values().iterator().next().updateSequences(seqs);
+
+                if(newFile) {
+                    // clear cache
+                    htables.values().iterator().next().clearCache();
+                    newFile = false;
+                }
             }
 
 //            try {
