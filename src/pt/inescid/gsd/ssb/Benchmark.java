@@ -331,6 +331,9 @@ public class Benchmark {
             if (outputAccesses) {
                 accessesF.write("-2\n");
             }
+            if(wave == waves) {
+                break;
+            }
             if(wave % wavesSet == 0) {
                 sequences = Benchmark.sequences.get(index++);
                 if(outputAccesses) {
@@ -374,6 +377,9 @@ public class Benchmark {
 //            } catch (InterruptedException e) {
 //                e.printStackTrace();
 //            }
+        }
+        if(outputAccesses) {
+            accessesF.close();
         }
     }
 
@@ -425,9 +431,6 @@ public class Benchmark {
         long diff = endTick - startTick;
         System.out.println("Time taken: " + diff);
 
-        if(outputAccesses) {
-            accessesF.close();
-        }
         statsF.write(",,,," + diff + "\n");
         statsF.close();
         // to close htable stats file
