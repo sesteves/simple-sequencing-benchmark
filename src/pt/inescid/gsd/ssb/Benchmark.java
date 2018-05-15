@@ -19,6 +19,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -213,65 +214,11 @@ public class Benchmark {
     }
 
 
-//    private static void generateFrequentSequences() {
-//        System.out.println("Generating frequent sequences...");
-//
-//        sequences = new ArrayList<>();
-////        extraSequences = new ArrayList<>();
-//
-//        for(int s = 0; s < SETS_OF_SEQUENCES; s++) {
-//
-//            List<List<DataContainer>> sequences = new ArrayList<>(sequencesSize);
-//            Benchmark.sequences.add(sequences);
-//
-//            for (int i = 0; i < sequencesSize; i++) {
-//                int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
-//                List<DataContainer> sequence = new ArrayList<>(sequenceSize);
-//
-//                if (sequenceType == SequenceType.COLUMN) {
-//                    String row = String.valueOf(random.nextInt(MAX_ROWS));
-//                    System.out.print("SEQ " + i + ": ");
-//                    for (int j = 0; j < sequenceSize; j++) {
-//                        String table = TABLES[random.nextInt(TABLES.length)];
-//                        String family = FAMILIES[random.nextInt(FAMILIES.length)];
-//                        String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
-//                        DataContainer item = new DataContainer(table, row, family, qualifier);
-//                        sequence.add(item);
-//                        System.out.print(item + " ");
-//                    }
-//                    System.out.println();
-//                    sequences.add(sequence);
-////                    extraSequences.add(sequence);
-//                } else if (sequenceType == SequenceType.ROW) {
-//                    String table = TABLES[random.nextInt(TABLES.length)];
-//                    String family = FAMILIES[random.nextInt(FAMILIES.length)];
-//                    String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
-//
-//                    List<List<DataContainer>> sequenceTree = generateBalancedSequenceTree(new ArrayList<DataContainer>(),
-//                            0, sequenceSize, table, family, qualifier);
-//                    sequences.addAll(sequenceTree);
-////                    extraSequences.addAll(sequenceTree);
-//
-////                for (int j = 0; j < sequenceSize; j++) {
-////                    String row = String.valueOf(random.nextInt(MAX_ROWS));
-////                    DataContainer item = new DataContainer(table, row, family, qualifier);
-////                    sequence.add(item);
-////                    System.out.print(item + " ");
-////                }
-////                System.out.println();
-//                }
-//            }
-//
-//            Collections.shuffle(sequences);
-//            // printSequences(sequences);
-//            System.out.println("Generated " + sequences.size() + " sequences");
-//        }
-//    }
-
     private static void generateFrequentSequences() {
         System.out.println("Generating frequent sequences...");
 
         sequences = new ArrayList<>();
+//        extraSequences = new ArrayList<>();
 
         for(int s = 0; s < SETS_OF_SEQUENCES; s++) {
 
@@ -291,25 +238,79 @@ public class Benchmark {
                         String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
                         DataContainer item = new DataContainer(table, row, family, qualifier);
                         sequence.add(item);
+                        System.out.print(item + " ");
                     }
+                    System.out.println();
+                    sequences.add(sequence);
+//                    extraSequences.add(sequence);
                 } else if (sequenceType == SequenceType.ROW) {
                     String table = TABLES[random.nextInt(TABLES.length)];
                     String family = FAMILIES[random.nextInt(FAMILIES.length)];
                     String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
 
-                    for (int j = 0; j < sequenceSize; j++) {
-                        String row = String.valueOf(random.nextInt(MAX_ROWS));
-                        DataContainer item = new DataContainer(table, row, family, qualifier);
-                        sequence.add(item);
-                    }
+                    List<List<DataContainer>> sequenceTree = generateBalancedSequenceTree(new ArrayList<DataContainer>(),
+                            0, sequenceSize, table, family, qualifier);
+                    sequences.addAll(sequenceTree);
+//                    extraSequences.addAll(sequenceTree);
+
+//                for (int j = 0; j < sequenceSize; j++) {
+//                    String row = String.valueOf(random.nextInt(MAX_ROWS));
+//                    DataContainer item = new DataContainer(table, row, family, qualifier);
+//                    sequence.add(item);
+//                    System.out.print(item + " ");
+//                }
+//                System.out.println();
                 }
-                sequences.add(sequence);
             }
 
+            Collections.shuffle(sequences);
             // printSequences(sequences);
             System.out.println("Generated " + sequences.size() + " sequences");
         }
     }
+
+//    private static void generateFrequentSequences() {
+//        System.out.println("Generating frequent sequences...");
+//
+//        sequences = new ArrayList<>();
+//
+//        for(int s = 0; s < SETS_OF_SEQUENCES; s++) {
+//
+//            List<List<DataContainer>> sequences = new ArrayList<>(sequencesSize);
+//            Benchmark.sequences.add(sequences);
+//
+//            for (int i = 0; i < sequencesSize; i++) {
+//                int sequenceSize = sequenceMinSize + random.nextInt((sequenceMaxSize - sequenceMinSize) + 1);
+//                List<DataContainer> sequence = new ArrayList<>(sequenceSize);
+//
+//                if (sequenceType == SequenceType.COLUMN) {
+//                    String row = String.valueOf(random.nextInt(MAX_ROWS));
+//                    System.out.print("SEQ " + i + ": ");
+//                    for (int j = 0; j < sequenceSize; j++) {
+//                        String table = TABLES[random.nextInt(TABLES.length)];
+//                        String family = FAMILIES[random.nextInt(FAMILIES.length)];
+//                        String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
+//                        DataContainer item = new DataContainer(table, row, family, qualifier);
+//                        sequence.add(item);
+//                    }
+//                } else if (sequenceType == SequenceType.ROW) {
+//                    String table = TABLES[random.nextInt(TABLES.length)];
+//                    String family = FAMILIES[random.nextInt(FAMILIES.length)];
+//                    String qualifier = QUALIFIERS[random.nextInt(QUALIFIERS.length)];
+//
+//                    for (int j = 0; j < sequenceSize; j++) {
+//                        String row = String.valueOf(random.nextInt(MAX_ROWS));
+//                        DataContainer item = new DataContainer(table, row, family, qualifier);
+//                        sequence.add(item);
+//                    }
+//                }
+//                sequences.add(sequence);
+//            }
+//
+//            // printSequences(sequences);
+//            System.out.println("Generated " + sequences.size() + " sequences");
+//        }
+//    }
 
     private static void runWorkload() throws IOException {
         System.out.println("Running workload...");
