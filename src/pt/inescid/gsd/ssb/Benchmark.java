@@ -369,7 +369,7 @@ public class Benchmark {
                     long endTick = System.nanoTime();
                     long diff = endTick - startTick;
 
-                    statsF.write(endTick + "," + index + ",g," + diff + ",\n");
+                    statsF.write(endTick + "," + index + "," + trigger + ",g," + diff + ",\n");
                     if (outputAccesses) {
                         String value = encodeAccess(rowInt, tableIndex, familyIndex, qualifierIndex);
                         accessesF.write(value + " -1 ");
