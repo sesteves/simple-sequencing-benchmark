@@ -35,7 +35,7 @@ public class Benchmark {
 
     private static final String accessesFNameMask = "accesses-%d.txt";
 
-    private static final String STATS_HEADER = "timestamp,seqset,op,latency,runtime";
+    private static final String STATS_HEADER = "timestamp,seqset,trigger,op,latency,runtime";
 
     private static final String[] TABLES = { "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9" };
     private static final String[] FAMILIES = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
@@ -324,6 +324,8 @@ public class Benchmark {
         boolean newFile = true;
         double wavesSet = Math.ceil((double)waves / (double)SETS_OF_SEQUENCES);
         int waveChunk = (int)(WAVE_CHUNK_PERCENTAGE * wavesSet);
+        int trigger = 0;
+
 
         for (int wave = 1; wave <= waves; wave++) {
 
@@ -339,8 +341,10 @@ public class Benchmark {
                     htables.get(dc.getTableStr()).get(get);
                     long endTick = System.nanoTime();
                     long diff = endTick - startTick;
-
-                    statsF.write(endTick + "," + index + ",g," + diff + ",\n");
+                    statsF.write(endTick + "," + index + ","  + trigger + ",g," + diff + ",\n");
+                    if(trigger == 1) {
+                        trigger = 0;
+                    }
                     if (outputAccesses) {
                         String value = encodeAccess(dc);
                         accessesF.write(value + " -1 ");
@@ -418,6 +422,7 @@ public class Benchmark {
                     // clear cache
                     htables.values().iterator().next().clearCache();
                     newFile = false;
+                    trigger = 1;
                 }
             }
 
@@ -480,7 +485,7 @@ public class Benchmark {
         long diff = endTick - startTick;
         System.out.println("Time taken: " + diff);
 
-        statsF.write(",,,," + diff + "\n");
+        statsF.write(",,,,," + diff + "\n");
         statsF.close();
         // to close htable stats file
         for(HTable htable : htables.values()) {
